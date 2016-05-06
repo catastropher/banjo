@@ -117,6 +117,7 @@ enum Token_kind
   volatile_tok,
   while_tok,
   last_keyword_tok,
+  match_tok,
 
   // Character classes
   identifier_tok,
