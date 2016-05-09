@@ -169,7 +169,10 @@ Parser::if_statement()
 
 Stmt&
 Parser::match_case_label() {
-  require(case_tok);
+  //match(case_tok);
+  
+  //Expr& match_expr = expression();
+  match(eq_arrow_tok);
 }
 
 Stmt&

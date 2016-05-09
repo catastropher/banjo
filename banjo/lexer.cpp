@@ -117,7 +117,7 @@ Lexer::scan()
 
     case '=':
       get();
-      if (lookahead() == '=')
+      if (lookahead() == '=' || lookahead() == '>')
         get();
       return symbol();
 

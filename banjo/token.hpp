@@ -39,6 +39,7 @@ enum Token_kind
   bar_tok,
   caret_tok,
   tilde_tok,
+  eq_arrow_tok,
   eq_tok,
   eq_eq_tok,
   bang_eq_tok,

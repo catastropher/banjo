@@ -78,6 +78,7 @@ init_tokens(Symbol_table& syms)
   init_token(syms, bar_tok, "|");
   init_token(syms, caret_tok, "^");
   init_token(syms, tilde_tok, "~");
+  init_token(syms, eq_arrow_tok, "=>");
   init_token(syms, eq_tok, "=");
   init_token(syms, eq_eq_tok, "==");
   init_token(syms, bang_eq_tok, "!=");
