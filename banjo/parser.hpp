@@ -119,6 +119,7 @@ struct Parser
   Stmt& continue_statement();
   Stmt& declaration_statement();
   Stmt& expression_statement();
+  Stmt& match_statement();
   Stmt_list statement_seq();
 
   // Declarations

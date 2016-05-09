@@ -64,6 +64,9 @@ Parser::statement()
 
     case semicolon_tok:
       return empty_statement();
+      
+    case match_tok:
+      return match_statement();
 
     default:
       return expression_statement();
@@ -152,6 +155,18 @@ Parser::if_statement()
   }
 }
 
+#include <cstdio>
+
+Stmt&
+Parser::match_statement()
+{
+  require(match_tok);
+  match(lparen_tok);
+  Expr& match_expr = expression();
+  match(rparen_tok);
+  
+  Stmt& match_stmt = statement();
+}
 
 Stmt&
 Parser::while_statement()
