@@ -167,7 +167,10 @@ Parser::if_statement()
   }
 }
 
-#include <cstdio>
+Stmt&
+Parser::match_case_label() {
+  require(case_tok);
+}
 
 Stmt&
 Parser::match_statement()
@@ -177,7 +180,9 @@ Parser::match_statement()
   Expr& match_expr = expression();
   match(rparen_tok);
   
-  Stmt& match_stmt = statement();
+  match(lbrace_tok);
+  match_case_label();
+  match(rbrace_tok);
 }
 
 Stmt&

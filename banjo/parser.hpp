@@ -123,6 +123,9 @@ struct Parser
   Stmt& expression_statement();
   Stmt& match_statement();
   Stmt_list statement_seq();
+  
+  // Labels
+  Stmt& match_case_label();
 
   // Declarations
   Name& declarator();
