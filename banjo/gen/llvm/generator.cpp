@@ -5,6 +5,7 @@
 
 #include <banjo/ast.hpp>
 #include <banjo/printer.hpp>
+#include <banjo/evaluation.hpp>
 
 #include <llvm/IR/Type.h>
 #include <llvm/IR/GlobalVariable.h>
@@ -56,6 +57,8 @@ Generator::get_type(Type const& t)
     llvm::Type* operator()(Integer_type const& t)  { return g.get_type(t); }
     llvm::Type* operator()(Float_type const& t)    { return g.get_type(t); }
     llvm::Type* operator()(Function_type const& t) { return g.get_type(t); }
+    llvm::Type* operator()(Array_type const& t)    { return g.get_type(t); }
+    llvm::Type* operator()(Dynarray_type const& t) { return g.get_type(t); }
     llvm::Type* operator()(Auto_type const& t)     { return g.get_type(t); }
   };
   return apply(t, fn{*this});
@@ -103,6 +106,26 @@ Generator::get_type(Function_type const& t)
     parms.push_back(get_type(pt));
   llvm::Type* ret = get_type(t.return_type());
   return llvm::FunctionType::get(ret, parms, false);
+}
+
+
+//return an array type
+llvm::Type*
+Generator::get_type(Array_type const& t) 
+{
+  llvm::Type* t1 = get_type(t.type());
+  Value v = evaluate(t.extent());
+  return llvm::ArrayType::get(t1, v.get_integer());
+}
+
+
+//return an array type
+llvm::Type*
+Generator::get_type(Dynarray_type const& t) 
+{
+  llvm::Type* t1 = get_type(t.type());
+  Value v = evaluate(t.extent());
+  return llvm::ArrayType::get(t1, v.get_integer());
 }
 
 
@@ -159,10 +182,7 @@ Generator::gen(Expr const& e)
     // llvm::Value* operator()(Promote_conv const* e) const { return g.gen(e); }
     // llvm::Value* operator()(Block_conv const* e) const { return g.gen(e); }
     // llvm::Value* operator()(Base_conv const* e) const { return g.gen(e); }
-    // llvm::Value* operator()(Init const* e) const { lingo_unreachable(); }
   };
-
-  std::cout << "EXPR: " << e << '\n';
   return apply(e, fn{*this});
 }
 
@@ -184,34 +204,6 @@ Generator::gen(Integer_expr const& e)
 
 
 #if 0
-
-
-namespace
-{
-struct Gen_init_fn
-{
-  Generator& g;
-  llvm::Value* ptr;
-
-  template<typename T>
-  void operator()(T const*) { lingo_unreachable(); }
-
-  void operator()(Default_init const* e) { g.gen_init(ptr, e); }
-  void operator()(Trivial_init const* e) { g.gen_init(ptr, e); }
-  void operator()(Copy_init const* e) { g.gen_init(ptr, e); }
-  void operator()(Reference_init const* e) { g.gen_init(ptr, e); }
-};
-
-
-} // namespace
-
-
-void
-Generator::gen_init(llvm::Value* ptr, Expr const* e)
-{
-  apply(e, Gen_init_fn{*this, ptr});
-}
-
 
 // Return the value corresponding to a literal expression.
 llvm::Value*
@@ -652,28 +644,6 @@ Generator::gen_init(llvm::Value* ptr, Default_init const* e)
   throw std::runtime_error("unhahndled default initializer");
 }
 
-void
-Generator::gen_init(llvm::Value* ptr, Trivial_init const* e)
-{
-  return;
-}
-
-// TODO: Return the value or store it?
-void
-Generator::gen_init(llvm::Value* ptr, Copy_init const* e)
-{
-  llvm::Value* init = gen(e->value());
-  build.CreateStore(init, ptr);
-}
-
-
-void
-Generator::gen_init(llvm::Value* ptr, Reference_init const* e)
-{
-  llvm::Value* init = gen(e->object());
-  build.CreateStore(init, ptr);
-}
-
 
 #endif
 
@@ -917,11 +887,15 @@ Generator::gen(Decl const& d)
 }
 
 
+// -------------------------------------------------------------------------- //
+// Code generation for variables
+
 void
 Generator::gen_local_variable(Variable_decl const& d)
 {
-  // Create the alloca instruction at the beginning of
-  // the function. Not at the point where we get it.
+  // Create the alloca instruction at the beginning of the function, and 
+  // not at the point it is declare. That is automatic storage is allocated
+  // at the beginning of the function. Initialization happens here.
   llvm::BasicBlock& b = fn->getEntryBlock();
   llvm::IRBuilder<> tmp(&b, b.begin());
   llvm::Type* type = get_type(d.type());
@@ -936,7 +910,7 @@ Generator::gen_local_variable(Variable_decl const& d)
   declare(d, ptr);
 
   // Generate the initializer.
-  // gen_init(ptr, d->init());
+  gen_local_init(ptr, d.initializer());
 }
 
 
@@ -986,6 +960,49 @@ Generator::gen(Variable_decl const& d)
 }
 
 
+// -------------------------------------------------------------------------- //
+// Iniitialization of variables
+
+void
+Generator::gen_local_init(llvm::Value* ptr, Def const& d)
+{
+  struct fn
+  {
+    Generator&   g;
+    llvm::Value* ptr;
+
+    void operator()(Def const& d)            { lingo_unhandled(d); }
+    void operator()(Empty_def const& d)      { g.gen_init(ptr, d); }
+    void operator()(Expression_def const& d) { g.gen_init(ptr, d); }
+  };
+  apply(d, fn{*this, ptr});
+}
+
+
+// Trivial default initialization performs no actions.
+//
+// TODO: Enable trap values for reading from indeterminate values? It
+// might be kind of nice to automatically modify the type to include
+// initialization state. Hmmm...
+void
+Generator::gen_init(llvm::Value* ptr, Empty_def const& e)
+{
+  return;
+}
+
+
+// Generate the initializer and store the result in the variable's
+// storage.
+void
+Generator::gen_init(llvm::Value* ptr, Expression_def const& e)
+{
+  llvm::Value* init = gen(e.expression());
+  build.CreateStore(init, ptr);
+}
+
+
+// -------------------------------------------------------------------------- //
+// Function declarations
 
 void
 Generator::gen(Function_decl const& d)

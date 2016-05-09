@@ -155,6 +155,8 @@ union Conversion_seq_rep
 // TODO: Integrate knowledge of reference binding since that affects
 // how conversions are ordered. Also support aggregate initialization,
 // since those rules might also affect ordering.
+//
+// TODO: Rename to implicit conversion sequence?
 struct Conversion_seq
 {
   Conversion_seq(Standard_conversion_seq s)
@@ -201,6 +203,10 @@ Conversion_comp compare(Standard_conversion_seq const&, Standard_conversion_seq 
 
 bool is_similar(Type const&, Type const&);
 Qualifier_list get_qualification_signature(Type const&);
+
+
+bool is_tuple_equiv_to_array(Tuple_type& t1, Array_type& t2);
+
 
 
 } // namespace banjo
