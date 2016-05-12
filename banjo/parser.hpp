@@ -125,7 +125,7 @@ struct Parser
   Stmt_list statement_seq();
   
   // Labels
-  Stmt& match_case_label();
+  void match_case_label(std::vector<Match_label>&);
 
   // Declarations
   Name& declarator();
@@ -315,6 +315,7 @@ struct Parser
   Stmt& on_empty_statement();
   Stmt& on_return_statement(Token, Expr&);
   Stmt& on_if_statement(Expr&, Stmt&);
+  Stmt& on_match_statement(Expr& e, std::vector<Match_label>& labels);
   Stmt& on_if_statement(Expr&, Stmt&, Stmt&);
   Stmt& on_while_statement(Expr&, Stmt&);
   Stmt& on_break_statement();

@@ -772,6 +772,12 @@ Builder::make_break_statement()
   return make<Break_stmt>();
 }
 
+Match_stmt&
+Builder::make_match_statement(Expr& e, std::vector<Match_label>& labels)
+{
+  return make<Match_stmt>(e, labels);
+}
+
 
 Continue_stmt&
 Builder::make_continue_statement()

@@ -187,6 +187,28 @@ struct If_then_stmt : Stmt
   Stmt* then_;
 };
 
+struct Match_label {
+  Expr* expr;
+  Stmt* stmt;
+  
+  Match_label(Expr& e, Stmt& s)
+    : expr(&e), stmt(&s)
+  { }
+};
+
+struct Match_stmt : Stmt
+{
+  void accept(Visitor& v) const { v.visit(*this); }
+  void accept(Mutator& v)       { v.visit(*this); }
+  
+  Expr* match_expr;
+  std::vector<Match_label> labels;
+  
+  Match_stmt(Expr& e, std::vector<Match_label>& labels_)
+    : match_expr(&e), labels(labels_)
+  { }
+};
+
 
 // An if-then-else statement.
 struct If_else_stmt : Stmt

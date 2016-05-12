@@ -142,6 +142,7 @@ struct Builder
   Continue_stmt&    make_continue_statement();
   Expression_stmt&  make_expression_statement(Expr&);
   Declaration_stmt& make_declaration_statement(Decl&);
+  Match_stmt&       make_match_statement(Expr& e, std::vector<Match_label>& labels);
 
   // Variables
   Variable_decl&  make_variable_declaration(Name&, Type&);

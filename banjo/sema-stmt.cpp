@@ -51,6 +51,11 @@ Parser::on_if_statement(Expr& e, Stmt& s)
   return cxt.make_if_statement(e, s);
 }
 
+Stmt&
+Parser::on_match_statement(Expr& e, std::vector<Match_label>& labels) {
+  return cxt.make_match_statement(e, labels);
+}
+
 
 Stmt&
 Parser::on_if_statement(Expr& e, Stmt& s1, Stmt& s2)

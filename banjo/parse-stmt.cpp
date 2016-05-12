@@ -167,12 +167,15 @@ Parser::if_statement()
   }
 }
 
-Stmt&
-Parser::match_case_label() {
-  //match(case_tok);
+void
+Parser::match_case_label(std::vector<Match_label>& labels) {
+  match(case_tok);
   
-  //Expr& match_expr = expression();
-  match(eq_arrow_tok);
+  Expr& label_expr = expression();
+  match(eq_arrow_tok);  
+  Stmt& label_stmt = statement();
+  
+  labels.push_back(Match_label(label_expr, label_stmt));
 }
 
 Stmt&
@@ -183,9 +186,16 @@ Parser::match_statement()
   Expr& match_expr = expression();
   match(rparen_tok);
   
+  std::vector<Match_label> labels;
+  
   match(lbrace_tok);
-  match_case_label();
+  
+  while(lookahead() != rbrace_tok)
+    match_case_label(labels);
+  
   match(rbrace_tok);
+  
+  return on_match_statement(match_expr, labels);
 }
 
 Stmt&
